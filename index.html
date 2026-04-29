@@ -1,10 +1,137 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Vanitas Arcade</title>
+    <title>Vanitas Arcade - Phaser Grid</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #2c3e50; /* 어두운 배경색으로 캔버스를 돋보이게 합니다 */
+        }
+        canvas {
+            box-shadow: 0 0 20px rgba(0,0,0,0.5); /* 캔버스에 그림자 효과 */
+            border-radius: 8px;
+        }
+    </style>
+    <!-- Phaser.js CDN 불러오기 -->
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
 </head>
 <body>
-    <h1>Vanitas Arcade - Coming Soon</h1>
-    <p>트래픽 잼 게임 개발 중...</p>
+    <script>
+        const config = {
+            type: Phaser.AUTO,
+            width: 600,
+            height: 600,
+            backgroundColor: '#ecf0f1', // 밝은 회색 캔버스 배경
+            scene: {
+                create: create
+            }
+        };
+
+        const game = new Phaser.Game(config);
+
+        function create() {
+            const cellSize = 80; // 각 그리드 칸의 크기 (픽셀)
+            const gridWidth = 6; // 가로 칸 수
+            const gridHeight = 6; // 세로 칸 수
+            
+            // 그리드가 화면 중앙에 오도록 시작 좌표 계산
+            const startX = (config.width - cellSize * gridWidth) / 2;
+            const startY = (config.height - cellSize * gridHeight) / 2;
+
+            // 1. 6x6 회색 그리드 배경 그리기
+            const gridBg = this.add.rectangle(
+                config.width / 2, 
+                config.height / 2, 
+                cellSize * gridWidth, 
+                cellSize * gridHeight, 
+                0xbdc3c7
+            );
+
+            // 2. 그리드 선 긋기
+            const graphics = this.add.graphics();
+            graphics.lineStyle(2, 0x7f8c8d, 1);
+            
+            // 가로선 그리기
+            for (let i = 0; i <= gridHeight; i++) {
+                graphics.moveTo(startX, startY + i * cellSize);
+                graphics.lineTo(startX + gridWidth * cellSize, startY + i * cellSize);
+            }
+            // 세로선 그리기
+            for (let j = 0; j <= gridWidth; j++) {
+                graphics.moveTo(startX + j * cellSize, startY);
+                graphics.lineTo(startX + j * cellSize, startY + gridHeight * cellSize);
+            }
+            graphics.strokePath();
+
+            // 3. 2칸 크기의 파란색 사각형(자동차) 생성
+            const carWidth = cellSize * 2;
+            const carHeight = cellSize;
+            
+            // 초기 위치 설정 (예: 2행 2열)
+            const carCol = 2; // 0부터 시작 (3번째 열)
+            const carRow = 2; // 0부터 시작 (3번째 행)
+            
+            // 중심축(origin)이 정가운데이므로 위치 계산
+            const carX = startX + carCol * cellSize + carWidth / 2;
+            const carY = startY + carRow * cellSize + carHeight / 2;
+
+            // 약간의 여백(padding)을 주어 칸 안에 쏙 들어가게 디자인
+            const padding = 8;
+            const car = this.add.rectangle(
+                carX, 
+                carY, 
+                carWidth - padding, 
+                carHeight - padding, 
+                0x3498db
+            );
+            car.setStrokeStyle(2, 0x2980b9); // 테두리 설정
+            
+            // 4. 드래그 앤 드롭 기능 추가
+            car.setInteractive({ cursor: 'grab' });
+            this.input.setDraggable(car);
+
+            // 드래그 시작 시 효과
+            this.input.on('dragstart', function (pointer, gameObject) {
+                gameObject.setDepth(1); // 맨 앞으로 가져오기
+                gameObject.fillColor = 0x2980b9; // 색상 약간 어둡게
+                game.canvas.style.cursor = 'grabbing';
+            });
+
+            // 드래그 중: 좌우(X축)로만 이동 가능하도록 제한
+            this.input.on('drag', function (pointer, gameObject, dragX, dragY) {
+                // 그리드를 벗어나지 않도록 X축의 최소/최대 좌표 제한 설정
+                const minX = startX + carWidth / 2;
+                const maxX = startX + gridWidth * cellSize - carWidth / 2;
+                
+                // Phaser.Math.Clamp를 이용해 dragX 값이 minX와 maxX 사이를 유지하게 함
+                gameObject.x = Phaser.Math.Clamp(dragX, minX, maxX);
+                // Y축(gameObject.y)은 변경하지 않아 위아래로는 움직이지 않음
+            });
+            
+            // 드래그 종료 시 효과 및 스냅(그리드 칸에 맞춤)
+            this.input.on('dragend', function (pointer, gameObject) {
+                gameObject.setDepth(0);
+                gameObject.fillColor = 0x3498db; // 원래 색상으로 복구
+                game.canvas.style.cursor = 'default';
+                
+                // 현재 위치에서 가장 가까운 열(Column) 계산
+                const relativeX = gameObject.x - carWidth / 2 - startX;
+                const closestCol = Math.round(relativeX / cellSize);
+                
+                // 해당 열의 정확한 위치로 애니메이션 이동 (스냅 효과)
+                gameObject.scene.tweens.add({
+                    targets: gameObject,
+                    x: startX + closestCol * cellSize + carWidth / 2,
+                    duration: 100, // 0.1초
+                    ease: 'Power1'
+                });
+            });
+        }
+    </script>
 </body>
 </html>
