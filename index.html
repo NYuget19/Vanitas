@@ -1,7 +1,9 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Vanitas Arcade - Phaser Grid</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vanitas Arcade - Dino Run</title>
     <style>
         body {
             margin: 0;
@@ -9,128 +11,280 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
-            background-color: #2c3e50; /* 어두운 배경색으로 캔버스를 돋보이게 합니다 */
+            min-height: 100vh;
+            /* 세련된 다크 모드 배경 (우주/심연 느낌의 그라데이션) */
+            background: linear-gradient(135deg, #0f2027, #203a43, #2c5364); 
+            font-family: 'Inter', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            overflow: hidden;
+            color: white;
         }
-        canvas {
-            box-shadow: 0 0 20px rgba(0,0,0,0.5); /* 캔버스에 그림자 효과 */
-            border-radius: 8px;
+
+        #game-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .title-container {
+            text-align: center;
+            text-shadow: 0 4px 10px rgba(0,0,0,0.5);
+        }
+        
+        h1 {
+            margin: 0;
+            font-size: 3rem;
+            font-weight: 800;
+            letter-spacing: 3px;
+            background: linear-gradient(to right, #00b4db, #0083b0);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-transform: uppercase;
+        }
+        
+        p {
+            margin: 5px 0 0 0;
+            font-size: 1.1rem;
+            color: #bdc3c7;
+            font-weight: 400;
+            letter-spacing: 1px;
+        }
+
+        #game-container {
+            position: relative;
+            /* 캔버스에 프리미엄 느낌의 네온/글래스모피즘 효과 추가 */
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5), 0 0 20px rgba(0, 180, 219, 0.3);
+            border-radius: 12px;
+            overflow: hidden;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            background-color: #ecf0f1;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        #game-container:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 25px 60px rgba(0,0,0,0.6), 0 0 30px rgba(0, 180, 219, 0.5);
         }
     </style>
-    <!-- Phaser.js CDN 불러오기 -->
+    <!-- Phaser.js CDN -->
     <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;800&display=swap" rel="stylesheet">
 </head>
 <body>
+    <div id="game-wrapper">
+        <div class="title-container">
+            <h1>Dino Run</h1>
+            <p>스페이스바 또는 화면을 터치하여 점프하세요!</p>
+        </div>
+        
+        <!-- 게임 캔버스가 삽입될 곳 -->
+        <div id="game-container"></div>
+    </div>
+
     <script>
         const config = {
             type: Phaser.AUTO,
-            width: 600,
-            height: 600,
-            backgroundColor: '#ecf0f1', // 밝은 회색 캔버스 배경
+            width: 800,
+            height: 400,
+            parent: 'game-container', // 캔버스를 지정된 div 안에 넣습니다.
+            backgroundColor: '#1e272e', // 어두운 게임 배경
+            physics: {
+                default: 'arcade',
+                arcade: {
+                    gravity: { y: 1500 }, // 중력 설정 (빠르게 떨어지도록 높게 설정)
+                    debug: false
+                }
+            },
             scene: {
-                create: create
+                preload: preload,
+                create: create,
+                update: update
             }
         };
 
         const game = new Phaser.Game(config);
 
+        let player;
+        let obstacles;
+        let score = 0;
+        let scoreText;
+        let gameOver = false;
+        let gameOverText;
+        let restartText;
+        let spawnTimer;
+
+        function preload() {
+            // 이미지 에셋이 없으므로 Phaser의 그래픽을 사용해 텍스처를 동적으로 생성합니다.
+        }
+
         function create() {
-            const cellSize = 80; // 각 그리드 칸의 크기 (픽셀)
-            const gridWidth = 6; // 가로 칸 수
-            const gridHeight = 6; // 세로 칸 수
-            
-            // 그리드가 화면 중앙에 오도록 시작 좌표 계산
-            const startX = (config.width - cellSize * gridWidth) / 2;
-            const startY = (config.height - cellSize * gridHeight) / 2;
-
-            // 1. 6x6 회색 그리드 배경 그리기
-            const gridBg = this.add.rectangle(
-                config.width / 2, 
-                config.height / 2, 
-                cellSize * gridWidth, 
-                cellSize * gridHeight, 
-                0xbdc3c7
-            );
-
-            // 2. 그리드 선 긋기
+            // 1. 그래픽스를 이용해 필요한 텍스처(이미지) 생성
             const graphics = this.add.graphics();
-            graphics.lineStyle(2, 0x7f8c8d, 1);
             
-            // 가로선 그리기
-            for (let i = 0; i <= gridHeight; i++) {
-                graphics.moveTo(startX, startY + i * cellSize);
-                graphics.lineTo(startX + gridWidth * cellSize, startY + i * cellSize);
-            }
-            // 세로선 그리기
-            for (let j = 0; j <= gridWidth; j++) {
-                graphics.moveTo(startX + j * cellSize, startY);
-                graphics.lineTo(startX + j * cellSize, startY + gridHeight * cellSize);
-            }
-            graphics.strokePath();
+            // 플레이어(공룡) 텍스처 생성 - 네온 블루 색상
+            graphics.fillStyle(0x00d2ff); // 그라데이션 대신 밝은 색상 사용
+            graphics.fillRoundedRect(0, 0, 40, 44, 8); // 둥근 사각형
+            // 눈(eye) 추가
+            graphics.fillStyle(0xffffff);
+            graphics.fillRect(25, 8, 8, 8);
+            graphics.generateTexture('player', 40, 44);
+            graphics.clear();
+            
+            // 장애물(선인장) 텍스처 생성 - 네온 핑크/레드 색상
+            graphics.fillStyle(0xff0055);
+            graphics.fillRoundedRect(0, 0, 24, 60, 6);
+            graphics.generateTexture('obstacle', 24, 60);
+            graphics.clear();
+            
+            // 바닥(Ground) 텍스처 생성
+            graphics.fillStyle(0x2c3e50);
+            graphics.fillRect(0, 0, 800, 30);
+            // 라인 포인트
+            graphics.fillStyle(0x00b4db);
+            graphics.fillRect(0, 0, 800, 4);
+            graphics.generateTexture('ground', 800, 30);
+            graphics.clear();
 
-            // 3. 2칸 크기의 파란색 사각형(자동차) 생성
-            const carWidth = cellSize * 2;
-            const carHeight = cellSize;
-            
-            // 초기 위치 설정 (예: 2행 2열)
-            const carCol = 2; // 0부터 시작 (3번째 열)
-            const carRow = 2; // 0부터 시작 (3번째 행)
-            
-            // 중심축(origin)이 정가운데이므로 위치 계산
-            const carX = startX + carCol * cellSize + carWidth / 2;
-            const carY = startY + carRow * cellSize + carHeight / 2;
+            // 2. 게임 변수 초기화
+            score = 0;
+            gameOver = false;
 
-            // 약간의 여백(padding)을 주어 칸 안에 쏙 들어가게 디자인
-            const padding = 8;
-            const car = this.add.rectangle(
-                carX, 
-                carY, 
-                carWidth - padding, 
-                carHeight - padding, 
-                0x3498db
+            // 3. 바닥 생성 및 물리 적용
+            const ground = this.physics.add.staticImage(400, 385, 'ground');
+
+            // 4. 플레이어 생성 및 설정
+            player = this.physics.add.sprite(100, 300, 'player');
+            player.setCollideWorldBounds(true);
+            
+            // 5. 충돌 처리 설정
+            this.physics.add.collider(player, ground);
+
+            // 6. 장애물 그룹 생성
+            obstacles = this.physics.add.group();
+            this.physics.add.collider(obstacles, ground);
+            
+            // 플레이어와 장애물 충돌 시 게임 오버 함수 호출
+            this.physics.add.collider(player, obstacles, hitObstacle, null, this);
+
+            // 7. UI 텍스트 추가 (점수 및 게임 오버 화면)
+            scoreText = this.add.text(20, 20, 'SCORE: 0', { 
+                fontSize: '24px', 
+                fill: '#00d2ff', 
+                fontFamily: 'Inter',
+                fontStyle: 'bold'
+            });
+
+            gameOverText = this.add.text(400, 150, 'GAME OVER', { 
+                fontSize: '64px', 
+                fill: '#ff0055', 
+                fontFamily: 'Inter', 
+                fontStyle: 'bold' 
+            });
+            gameOverText.setOrigin(0.5);
+            gameOverText.setVisible(false);
+            
+            restartText = this.add.text(400, 230, '여기를 클릭하거나 스페이스바를 눌러 재시작', { 
+                fontSize: '20px', 
+                fill: '#bdc3c7', 
+                fontFamily: 'Inter' 
+            });
+            restartText.setOrigin(0.5);
+            restartText.setVisible(false);
+
+            // 8. 입력 이벤트 처리 (점프 및 재시작)
+            // 마우스 클릭 / 터치
+            this.input.on('pointerdown', () => {
+                if (gameOver) {
+                    restartGame.call(this);
+                } else {
+                    jump();
+                }
+            });
+
+            // 스페이스바
+            this.input.keyboard.on('keydown-SPACE', () => {
+                if (gameOver) {
+                    restartGame.call(this);
+                } else {
+                    jump();
+                }
+            });
+
+            // 9. 장애물 주기적 생성 타이머 시작
+            spawnTimer = this.time.addEvent({
+                delay: Phaser.Math.Between(1000, 2000),
+                callback: spawnObstacle,
+                callbackScope: this,
+                loop: true
+            });
+        }
+
+        function update() {
+            if (gameOver) return;
+
+            // 점수 증가 로직 (시간 비례)
+            score += 0.1;
+            scoreText.setText('SCORE: ' + Math.floor(score));
+
+            // 화면을 벗어난 장애물 삭제 (메모리 최적화)
+            obstacles.children.iterate(function (child) {
+                if (child && child.x < -50) {
+                    child.destroy();
+                }
+            });
+        }
+
+        // 점프 함수
+        function jump() {
+            // 플레이어가 바닥에 닿아있을 때만 점프 가능
+            if (player.body.touching.down) {
+                player.setVelocityY(-750); // 점프 힘 (위로 솟구치는 속도)
+            }
+        }
+
+        // 장애물 생성 함수
+        function spawnObstacle() {
+            if (gameOver) return;
+
+            // 화면 오른쪽 끝에서 생성
+            const obstacle = obstacles.create(850, 330, 'obstacle');
+            
+            // 크기에 약간의 랜덤성을 부여하여 재미 요소 추가
+            const heightVariation = Phaser.Math.Between(0, 15);
+            obstacle.setScale(1, 1 + heightVariation / 50);
+            
+            // 장애물을 왼쪽으로 이동 (속도)
+            // 점수가 높아질수록 속도가 조금씩 빨라집니다.
+            const baseSpeed = -400;
+            const speedIncrease = Math.min(score, 300); // 속도 증가 상한선
+            obstacle.setVelocityX(baseSpeed - speedIncrease);
+            
+            // 다음 장애물이 나오는 간격을 랜덤하게 조절하여 난이도 변동
+            const newDelay = Phaser.Math.Between(
+                Math.max(600, 1200 - score * 2), 
+                Math.max(1000, 2000 - score * 2)
             );
-            car.setStrokeStyle(2, 0x2980b9); // 테두리 설정
-            
-            // 4. 드래그 앤 드롭 기능 추가
-            car.setInteractive({ cursor: 'grab' });
-            this.input.setDraggable(car);
+            spawnTimer.reset({ delay: newDelay, callback: spawnObstacle, callbackScope: this, loop: true });
+        }
 
-            // 드래그 시작 시 효과
-            this.input.on('dragstart', function (pointer, gameObject) {
-                gameObject.setDepth(1); // 맨 앞으로 가져오기
-                gameObject.fillColor = 0x2980b9; // 색상 약간 어둡게
-                game.canvas.style.cursor = 'grabbing';
-            });
-
-            // 드래그 중: 좌우(X축)로만 이동 가능하도록 제한
-            this.input.on('drag', function (pointer, gameObject, dragX, dragY) {
-                // 그리드를 벗어나지 않도록 X축의 최소/최대 좌표 제한 설정
-                const minX = startX + carWidth / 2;
-                const maxX = startX + gridWidth * cellSize - carWidth / 2;
-                
-                // Phaser.Math.Clamp를 이용해 dragX 값이 minX와 maxX 사이를 유지하게 함
-                gameObject.x = Phaser.Math.Clamp(dragX, minX, maxX);
-                // Y축(gameObject.y)은 변경하지 않아 위아래로는 움직이지 않음
-            });
+        // 장애물과 충돌 시 실행되는 함수
+        function hitObstacle(player, obstacle) {
+            this.physics.pause(); // 모든 물리 이동 정지
+            player.setTint(0xff0000); // 공룡 색상을 붉게 변경
+            gameOver = true;
             
-            // 드래그 종료 시 효과 및 스냅(그리드 칸에 맞춤)
-            this.input.on('dragend', function (pointer, gameObject) {
-                gameObject.setDepth(0);
-                gameObject.fillColor = 0x3498db; // 원래 색상으로 복구
-                game.canvas.style.cursor = 'default';
-                
-                // 현재 위치에서 가장 가까운 열(Column) 계산
-                const relativeX = gameObject.x - carWidth / 2 - startX;
-                const closestCol = Math.round(relativeX / cellSize);
-                
-                // 해당 열의 정확한 위치로 애니메이션 이동 (스냅 효과)
-                gameObject.scene.tweens.add({
-                    targets: gameObject,
-                    x: startX + closestCol * cellSize + carWidth / 2,
-                    duration: 100, // 0.1초
-                    ease: 'Power1'
-                });
-            });
+            // 게임 오버 UI 표시
+            gameOverText.setVisible(true);
+            restartText.setVisible(true);
+
+            // 화면이 약간 흔들리는 이펙트 (충격 효과)
+            this.cameras.main.shake(200, 0.01);
+        }
+
+        // 게임 재시작 함수
+        function restartGame() {
+            this.scene.restart();
         }
     </script>
 </body>
