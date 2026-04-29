@@ -286,7 +286,7 @@
             
             player.setPosition(100, 300);
             player.clearTint();
-            player.play('idle');
+            player.play('idle', true);
             
             obstacles.clear(true, true);
             if(spawnTimer) spawnTimer.remove();
@@ -298,7 +298,7 @@
         function startGame() {
             gameState = 'PLAYING';
             startPopup.style.display = 'none';
-            player.play('run');
+            player.play('run', true);
             startTime = this.time.now;
             
             scheduleNextObstacle.call(this);
@@ -351,8 +351,8 @@
                 this.lastScore = scoreInt;
             }
 
-            if (player.body.touching.down && player.anims.currentAnim.key !== 'run') {
-                player.play('run');
+            if (player.body.touching.down) {
+                player.play('run', true);
             }
 
             bgLayer1.tilePositionX += (baseSpeed * 0.001);
@@ -387,23 +387,8 @@
         function createConfigurableSprites(scene) {
             const g = scene.add.graphics();
             
-            // 플레이어 대기
-            g.fillStyle(0x00d2ff); g.fillRect(0,0,32,32);
-            g.fillStyle(0xffffff); g.fillRect(20,6,6,6);
-            g.generateTexture('player_idle', 32, 32); g.clear();
+            // 플레이어 관련 임시 텍스처 생성은 사용자 리소스를 사용하므로 제거합니다.
             
-            // 플레이어 런1
-            g.fillStyle(0x00d2ff); g.fillRect(0,0,32,28);
-            g.fillRect(4,28,8,4); g.fillRect(20,28,8,4); 
-            g.fillStyle(0xffffff); g.fillRect(20,6,6,6);
-            g.generateTexture('player_run1', 32, 32); g.clear();
-
-            // 플레이어 런2
-            g.fillStyle(0x00d2ff); g.fillRect(0,0,32,28);
-            g.fillRect(12,28,8,4); 
-            g.fillStyle(0xffffff); g.fillRect(20,6,6,6);
-            g.generateTexture('player_run2', 32, 32); g.clear();
-
             // 장애물
             g.fillStyle(0xff0055); g.fillRect(0,0,20,30);
             g.generateTexture('obs_small', 20, 30); g.clear();
