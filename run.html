@@ -210,26 +210,48 @@
         let spawnTimer;
 
         function preload() {
-            // 외부 에셋 로드 예시
-            // this.load.image('player_idle', 'assets/player.png');
+            // 사용자가 직접 만든 리소스 로드
+            this.load.image('player_idle', 'assets/player_idle.png');
+            this.load.image('player_move1', 'assets/player_move1.png');
+            this.load.image('player_move2', 'assets/player_move2.png');
         }
 
         function create() {
+            // [에셋 설정 시스템] 임시 도형 스프라이트를 생성하여 캐시에 저장
             createConfigurableSprites(this);
 
+            // [배경] 패럴랙스 무한 스크롤 레이어
             bgLayer1 = this.add.tileSprite(400, 200, 800, 400, 'bg_layer1').setAlpha(0.3);
             bgLayer2 = this.add.tileSprite(400, 200, 800, 400, 'bg_layer2').setAlpha(0.6);
 
+            // [바닥] 보이지 않는 물리 객체 + 보이는 타일 스프라이트 
             ground = this.physics.add.staticImage(400, 380, 'ground_tex').setVisible(false);
             groundTile = this.add.tileSprite(400, 380, 800, 40, 'ground_tex');
 
+            // [캐릭터] 물리 스프라이트 생성 (사용자 리소스로 시작)
             player = this.physics.add.sprite(100, 300, 'player_idle');
             player.setCollideWorldBounds(true);
+            // 도트 그래픽이므로 크기를 조금 키워주면 더 잘 보입니다 (선택 사항)
+            player.setScale(2); 
             this.physics.add.collider(player, ground);
 
-            this.anims.create({ key: 'idle', frames: [{ key: 'player_idle' }], frameRate: 1 });
-            this.anims.create({ key: 'run', frames: [{ key: 'player_run1' }, { key: 'player_run2' }], frameRate: 10, repeat: -1 });
+            // [캐릭터] 애니메이션 등록 (사용자 리소스 기반)
+            this.anims.create({
+                key: 'idle',
+                frames: [{ key: 'player_idle' }],
+                frameRate: 1
+            });
+            this.anims.create({
+                key: 'run',
+                frames: [
+                    { key: 'player_move1' },
+                    { key: 'player_move2' }
+                ],
+                frameRate: 10,
+                repeat: -1
+            });
             
+            // [장애물] 그룹 생성 및 충돌 처리
             obstacles = this.physics.add.group();
             this.physics.add.collider(player, obstacles, onGameOver, null, this);
 
