@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vanitas Arcade - R U N</title>
+    <title>Vanitas Arcade - Portal</title>
     <style>
         /* 갈무리11 폰트 로드 */
         @font-face {
@@ -16,420 +16,81 @@
         body {
             margin: 0;
             padding: 0;
+            background-color: #111;
+            font-family: 'Galmuri11', sans-serif;
+            color: white;
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            background-color: #111; /* 기획의도에 맞춘 어두운 배경 */
-            font-family: 'Galmuri11', sans-serif; /* 전역 폰트 설정 */
-            color: white;
             overflow: hidden;
-            user-select: none;
         }
 
-        /* 게임 영역 컨테이너 */
-        #game-wrapper {
-            position: relative;
-            box-shadow: 0 0 40px rgba(0,0,0,0.9);
-            border: 2px solid #444;
-            border-radius: 4px;
-        }
-
-        #game-container {
-            width: 800px;
-            height: 400px;
-            background-color: #000;
-        }
-        
-        /* 픽셀 아트 스타일을 선명하게 렌더링 */
-        canvas {
-            image-rendering: pixelated; 
-        }
-
-        /* HTML UI 오버레이 레이어 */
-        .ui-layer {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            pointer-events: none;
-            display: flex;
-            flex-direction: column;
-            z-index: 10;
-        }
-
-        /* 상단 점수 표시 보드 */
-        .score-board {
-            position: absolute;
-            top: 20px; right: 20px;
-            text-align: right;
-            font-size: 24px;
-            text-shadow: 2px 2px 0px #000; /* 가독성 향상 */
-            letter-spacing: 2px;
-        }
-
-        .score-board .hi-score {
-            color: #888;
-            margin-right: 20px;
-        }
-
-        /* 중앙 팝업 공통 스타일 */
-        .center-popup {
-            position: absolute;
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
+        #portal-container {
             text-align: center;
-            background: rgba(0,0,0,0.85);
-            padding: 30px 60px;
-            border: 2px solid #fff;
-            border-radius: 8px;
-            display: none; /* 상태에 따라 JS에서 제어 */
-            flex-direction: column;
-            align-items: center;
-            gap: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
         }
 
-        .center-popup h2 { 
-            margin: 0; 
-            font-size: 40px; 
-            color: #ff4757; 
-            text-shadow: 2px 2px 0px #000;
+        h1 {
+            font-size: 48px;
+            letter-spacing: 5px;
+            margin-bottom: 30px;
+            background: linear-gradient(to right, #00d2ff, #3a7bd5);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
-        .center-popup p { margin: 0; font-size: 24px; }
-        
-        /* 깜빡임 효과 */
-        .blink { animation: blinker 1s linear infinite; }
-        @keyframes blinker { 50% { opacity: 0; } }
 
-        /* 시작 대기 화면 특화 */
-        #start-popup { 
-            display: flex; 
-            background: none; 
-            border: none; 
-            box-shadow: none; 
+        p {
+            font-size: 18px;
+            color: #888;
+            margin-bottom: 50px;
+        }
+
+        /* 간단한 로딩 애니메이션 */
+        .loader {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #333;
+            border-top: 5px solid #00d2ff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
     </style>
-    <!-- Phaser 3 CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
 </head>
 <body>
-    <div id="game-wrapper">
-        <div id="game-container"></div>
-        
-        <!-- UI HTML 레이어 -->
-        <div class="ui-layer">
-            <div class="score-board">
-                <span class="hi-score">HI <span id="ui-hiscore">00000</span></span>
-                <span><span id="ui-score">00000</span></span>
-            </div>
-
-            <!-- 대기 팝업 -->
-            <div id="start-popup" class="center-popup">
-                <h2 style="color:#ffffff; font-size: 64px; letter-spacing: 10px;">R U N</h2>
-                <p class="blink" style="color:#2ed573; margin-top:20px;">Press SPACE to Start</p>
-            </div>
-
-            <!-- 게임 오버 팝업 -->
-            <div id="gameover-popup" class="center-popup">
-                <h2>GAME OVER</h2>
-                <p style="color:#fff;">SCORE: <span id="popup-score">0</span></p>
-                <p style="color:#aaa; font-size:18px;">PLAY TIME: <span id="popup-time">0</span>s</p>
-                <p class="blink" style="color:#7bed9f; margin-top:30px;">Press SPACE to Restart</p>
-            </div>
-        </div>
+    <div id="portal-container">
+        <h1>VANITAS ARCADE</h1>
+        <p>게임에 접속하는 중...</p>
+        <div class="loader"></div>
     </div>
 
     <script>
-        // --- 1. 사운드 매니저 (웹 오디오 API를 이용한 임시 비프음) ---
-        const Sound = {
-            ctx: null,
-            init: function() {
-                // 브라우저 정책상 사용자 인터랙션 후 초기화 필요
-                if (!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)();
-            },
-            playTone: function(freq, type, dur, vol) {
-                if (!this.ctx) return;
-                const osc = this.ctx.createOscillator();
-                const gain = this.ctx.createGain();
-                osc.type = type;
-                osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
-                gain.gain.setValueAtTime(vol, this.ctx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + dur);
-                osc.connect(gain);
-                gain.connect(this.ctx.destination);
-                osc.start();
-                osc.stop(this.ctx.currentTime + dur);
-            },
-            jump: function() { this.playTone(400, 'square', 0.15, 0.03); },
-            score: function() { this.playTone(800, 'sine', 0.1, 0.05); }, // 100점 돌파음
-            die: function() { this.playTone(150, 'sawtooth', 0.4, 0.05); } // 오버음
-        };
+        // [기획 요구사항] 등록된 게임들 중 하나 랜덤으로 선택하여 실행
+        // 새로운 게임이 생기면 이 리스트에 추가하면 됩니다.
+        const games = [
+            'run.html'
+            // 'puzzle.html',
+            // 'jump.html' 등 추가 가능
+        ];
 
-        // --- 2. 전역 변수 및 DOM 엘리먼트 ---
-        let highScore = localStorage.getItem('vanitas_run_hiscore') || 0;
-        const uiScore = document.getElementById('ui-score');
-        const uiHiScore = document.getElementById('ui-hiscore');
-        const startPopup = document.getElementById('start-popup');
-        const gameoverPopup = document.getElementById('gameover-popup');
-        const popupScore = document.getElementById('popup-score');
-        const popupTime = document.getElementById('popup-time');
-
-        uiHiScore.innerText = String(Math.floor(highScore)).padStart(5, '0');
-
-        // --- 3. Phaser 게임 설정 ---
-        const config = {
-            type: Phaser.AUTO,
-            width: 800,
-            height: 400,
-            parent: 'game-container',
-            backgroundColor: '#1e1e24',
-            pixelArt: true, // 픽셀 아트 렌더링 최적화
-            physics: {
-                default: 'arcade',
-                arcade: {
-                    gravity: { y: 2500 }, // 중력
-                    debug: false
-                }
-            },
-            scene: { create: create, update: update }
-        };
-
-        const game = new Phaser.Game(config);
-
-        // 씬 내부 전역 상태
-        let player, obstacles, ground;
-        let bgLayer1, bgLayer2, groundTile;
-        let gameState = 'IDLE'; // 상태 머신: IDLE, PLAYING, GAMEOVER
-        let currentScore = 0;
-        let baseSpeed = 400; // 스크롤 속도
-        let startTime = 0;
-        let playTime = 0;
-        let spawnTimer;
-
-        function create() {
-            // [에셋 설정 시스템] 임시 도형 스프라이트를 생성하여 캐시에 저장
-            createConfigurableSprites(this);
-
-            // [배경] 패럴랙스 무한 스크롤 레이어
-            bgLayer1 = this.add.tileSprite(400, 200, 800, 400, 'bg_layer1').setAlpha(0.3);
-            bgLayer2 = this.add.tileSprite(400, 200, 800, 400, 'bg_layer2').setAlpha(0.6);
-
-            // [바닥] 보이지 않는 물리 객체 + 보이는 타일 스프라이트 
-            ground = this.physics.add.staticImage(400, 380, 'ground_tex').setVisible(false);
-            groundTile = this.add.tileSprite(400, 380, 800, 40, 'ground_tex');
-
-            // [캐릭터] 물리 스프라이트 생성
-            player = this.physics.add.sprite(100, 300, 'player_idle');
-            player.setCollideWorldBounds(true);
-            this.physics.add.collider(player, ground);
-
-            // [캐릭터] 애니메이션 등록 (대기 및 2프레임 달리기)
-            this.anims.create({ key: 'idle', frames: [{ key: 'player_idle' }], frameRate: 1 });
-            this.anims.create({ key: 'run', frames: [{ key: 'player_run1' }, { key: 'player_run2' }], frameRate: 10, repeat: -1 });
+        function launchRandomGame() {
+            // 랜덤 인덱스 선택
+            const randomIndex = Math.floor(Math.random() * games.length);
+            const selectedGame = games[randomIndex];
             
-            // [장애물] 그룹 생성 및 충돌 처리
-            obstacles = this.physics.add.group();
-            this.physics.add.collider(obstacles, ground);
-            this.physics.add.collider(player, obstacles, onGameOver, null, this);
-
-            // [입력] 스페이스바 및 클릭/터치 이벤트 연결
-            this.input.keyboard.on('keydown-SPACE', handleInput.bind(this));
-            this.input.on('pointerdown', handleInput.bind(this));
-
-            // 씬 초기화
-            enterIdleState.call(this);
+            // 약간의 연출용 딜레이 후 이동
+            setTimeout(() => {
+                window.location.href = selectedGame;
+            }, 1200);
         }
 
-        // --- 4. 상태 제어 함수 ---
-        function handleInput() {
-            Sound.init(); // 브라우저 정책 해결
-            
-            if (gameState === 'IDLE') {
-                startGame.call(this);
-            } else if (gameState === 'PLAYING') {
-                // 점프 로직
-                if (player.body.touching.down) {
-                    player.setVelocityY(-850);
-                    player.play('idle'); // 점프 중에는 다리를 모으는 모션(idle)
-                    Sound.jump();
-                }
-            } else if (gameState === 'GAMEOVER') {
-                enterIdleState.call(this);
-                startGame.call(this);
-            }
-        }
-
-        function enterIdleState() {
-            gameState = 'IDLE';
-            currentScore = 0;
-            baseSpeed = 400; // 난이도 초기화
-            uiScore.innerText = '00000';
-            
-            player.setPosition(100, 300);
-            player.clearTint();
-            player.play('idle'); // 대기 모션
-            
-            obstacles.clear(true, true);
-            if(spawnTimer) spawnTimer.remove();
-            
-            startPopup.style.display = 'flex';
-            gameoverPopup.style.display = 'none';
-        }
-
-        function startGame() {
-            gameState = 'PLAYING';
-            startPopup.style.display = 'none';
-            player.play('run'); // 달리기 애니메이션 시작
-            startTime = this.time.now;
-            
-            scheduleNextObstacle.call(this);
-        }
-
-        // --- 5. 시스템 및 로직 업데이트 ---
-        function scheduleNextObstacle() {
-            if (gameState !== 'PLAYING') return;
-
-            // 점수 기반 난이도에 따른 딜레이 감소
-            const minDelay = Math.max(700, 1500 - currentScore);
-            const maxDelay = Math.max(1200, 2500 - currentScore);
-            
-            spawnTimer = this.time.addEvent({
-                delay: Phaser.Math.Between(minDelay, maxDelay),
-                callback: spawnObstacle,
-                callbackScope: this
-            });
-        }
-
-        function spawnObstacle() {
-            if (gameState !== 'PLAYING') return;
-
-            const type = Phaser.Math.Between(1, 100);
-            let obs;
-
-            // 장애물 타입 분기 처리
-            if (type <= 50) {
-                // 작은 장애물 (50%)
-                obs = obstacles.create(850, 345, 'obs_small');
-                obs.body.setSize(20, 30);
-            } else if (type <= 80) {
-                // 큰 장애물 (30%)
-                obs = obstacles.create(850, 335, 'obs_large');
-                obs.body.setSize(30, 50);
-            } else {
-                // 비행 장애물 (20%) - 공중에 생성
-                obs = obstacles.create(850, 270, 'obs_fly');
-                obs.body.setAllowGravity(false); 
-                // 애니메이션이 있다면 적용 (현재는 단일 프레임)
-            }
-
-            obs.setVelocityX(-baseSpeed);
-            scheduleNextObstacle.call(this); // 다음 생성 예약
-        }
-
-        function update() {
-            if (gameState !== 'PLAYING') return;
-
-            // 점수 및 시간 누적
-            playTime = Math.floor((this.time.now - startTime) / 1000);
-            currentScore += 0.1; 
-            uiScore.innerText = String(Math.floor(currentScore)).padStart(5, '0');
-
-            // [난이도 상승 시스템] 100점 단위로 속도 증가
-            const scoreInt = Math.floor(currentScore);
-            if (scoreInt > 0 && scoreInt % 100 === 0 && this.lastScore !== scoreInt) {
-                baseSpeed += 25; // 게임 속도 증가
-                Sound.score();   // 통과음 발생
-                this.lastScore = scoreInt;
-            }
-
-            // 착지 애니메이션 복구
-            if (player.body.touching.down && player.anims.currentAnim.key !== 'run') {
-                player.play('run');
-            }
-
-            // 스크롤 배경 업데이트
-            bgLayer1.tilePositionX += (baseSpeed * 0.001);
-            bgLayer2.tilePositionX += (baseSpeed * 0.003);
-            groundTile.tilePositionX += (baseSpeed * 0.016);
-
-            // 오브젝트 삭제 (가비지 컬렉터 부담 경감)
-            obstacles.children.iterate(child => {
-                if (child && child.x < -50) child.destroy();
-            });
-        }
-
-        function onGameOver(player, obstacle) {
-            gameState = 'GAMEOVER';
-            this.physics.pause();
-            player.setTint(0xff4757); // 충돌 피격 효과 (붉은색)
-            player.play('idle');
-            Sound.die();
-
-            // 최고 점수 갱신
-            if (currentScore > highScore) {
-                highScore = currentScore;
-                localStorage.setItem('vanitas_run_hiscore', highScore);
-                uiHiScore.innerText = String(Math.floor(highScore)).padStart(5, '0');
-            }
-
-            // 팝업 데이터 주입 및 표시
-            popupScore.innerText = Math.floor(currentScore);
-            popupTime.innerText = playTime;
-            gameoverPopup.style.display = 'flex';
-            
-            // 화면 쉐이크
-            this.cameras.main.shake(200, 0.02);
-        }
-
-        // --- 6. 에셋 생성 함수 (기획안의 'sprites 설정 가능' 요구사항 대응) ---
-        // 향후 실제 PNG 파일 적용 시 preload()에서 this.load.image()로 변경하기만 하면 동작합니다.
-        function createConfigurableSprites(scene) {
-            const g = scene.add.graphics();
-            
-            // [캐릭터] 대기 
-            g.fillStyle(0x00d2ff); g.fillRect(0,0,32,32);
-            g.fillStyle(0xffffff); g.fillRect(20,6,6,6); // 눈
-            g.generateTexture('player_idle', 32, 32); g.clear();
-            
-            // [캐릭터] 이동 1 (다리 벌림)
-            g.fillStyle(0x00d2ff); g.fillRect(0,0,32,28);
-            g.fillRect(4,28,8,4); g.fillRect(20,28,8,4); 
-            g.fillStyle(0xffffff); g.fillRect(20,6,6,6);
-            g.generateTexture('player_run1', 32, 32); g.clear();
-
-            // [캐릭터] 이동 2 (다리 모음)
-            g.fillStyle(0x00d2ff); g.fillRect(0,0,32,28);
-            g.fillRect(12,28,8,4); 
-            g.fillStyle(0xffffff); g.fillRect(20,6,6,6);
-            g.generateTexture('player_run2', 32, 32); g.clear();
-
-            // [장애물] 작은
-            g.fillStyle(0xff0055); g.fillRect(0,0,20,30);
-            g.generateTexture('obs_small', 20, 30); g.clear();
-
-            // [장애물] 큰
-            g.fillStyle(0xff0055); g.fillRect(0,0,30,50);
-            g.generateTexture('obs_large', 30, 50); g.clear();
-
-            // [장애물] 비행 (노란색 익룡 형태)
-            g.fillStyle(0xffa502); g.fillRect(0,10,30,10); 
-            g.fillRect(10,0,10,30); 
-            g.generateTexture('obs_fly', 30, 30); g.clear();
-
-            // [배경] 레이어 1 (원경 - 빌딩이나 산)
-            g.fillStyle(0x333333);
-            for(let i=0; i<10; i++) g.fillRect(i*80, 200 + Math.random()*50, 40, 200);
-            g.generateTexture('bg_layer1', 800, 400); g.clear();
-
-            // [배경] 레이어 2 (근경)
-            g.fillStyle(0x444444);
-            for(let i=0; i<15; i++) g.fillRect(i*60, 250 + Math.random()*30, 30, 150);
-            g.generateTexture('bg_layer2', 800, 400); g.clear();
-
-            // [바닥]
-            g.fillStyle(0x2c3e50); g.fillRect(0,0,800,40); 
-            g.fillStyle(0x00b4db); g.fillRect(0,0,800,4); // 상단 네온 라인
-            g.generateTexture('ground_tex', 800, 40); g.clear();
-        }
+        // 페이지 로드 시 실행
+        window.onload = launchRandomGame;
     </script>
 </body>
 </html>

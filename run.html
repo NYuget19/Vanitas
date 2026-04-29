@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vanitas Arcade - R U N</title>
+    <style>
+        /* 갈무리11 폰트 로드 */
+        @font-face {
+            font-family: 'Galmuri11';
+            src: url('https://fastly.jsdelivr.net/gh/Project-Noonnu/noonfonts_20-10-21@1.0/Galmuri11.woff') format('woff');
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #111;
+            font-family: 'Galmuri11', sans-serif;
+            color: white;
+            overflow: hidden;
+            user-select: none;
+        }
+
+        /* 폰트 로딩 강제화를 위한 숨겨진 요소 */
+        .font-loader {
+            font-family: 'Galmuri11';
+            position: absolute;
+            visibility: hidden;
+            height: 0;
+            top: -100px;
+        }
+
+        #game-wrapper {
+            position: relative;
+            box-shadow: 0 0 40px rgba(0,0,0,0.9);
+            border: 2px solid #444;
+            border-radius: 4px;
+        }
+
+        #game-container {
+            width: 800px;
+            height: 400px;
+            background-color: #000;
+        }
+        
+        canvas {
+            image-rendering: pixelated; 
+        }
+
+        .ui-layer {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            z-index: 10;
+        }
+
+        .score-board {
+            position: absolute;
+            top: 20px; right: 20px;
+            text-align: right;
+            font-size: 24px;
+            text-shadow: 2px 2px 0px #000;
+            letter-spacing: 2px;
+        }
+
+        .score-board .hi-score {
+            color: #888;
+            margin-right: 20px;
+        }
+
+        .center-popup {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            background: rgba(0,0,0,0.85);
+            padding: 30px 60px;
+            border: 2px solid #fff;
+            border-radius: 8px;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+        }
+
+        .center-popup h2 { 
+            margin: 0; 
+            font-size: 40px; 
+            color: #ff4757; 
+            text-shadow: 2px 2px 0px #000;
+        }
+        .center-popup p { margin: 0; font-size: 24px; }
+        
+        .blink { animation: blinker 1s linear infinite; }
+        @keyframes blinker { 50% { opacity: 0; } }
+
+        #start-popup { 
+            display: flex; 
+            background: none; 
+            border: none; 
+            box-shadow: none; 
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
+</head>
+<body>
+    <div class="font-loader">Galmuri11 Loading...</div>
+
+    <div id="game-wrapper">
+        <div id="game-container"></div>
+        
+        <div class="ui-layer">
+            <div class="score-board">
+                <span class="hi-score">HI <span id="ui-hiscore">00000</span></span>
+                <span><span id="ui-score">00000</span></span>
+            </div>
+
+            <div id="start-popup" class="center-popup">
+                <h2 style="color:#ffffff; font-size: 64px; letter-spacing: 10px;">R U N</h2>
+                <p class="blink" style="color:#2ed573; margin-top:20px;">Press SPACE to Start</p>
+            </div>
+
+            <div id="gameover-popup" class="center-popup">
+                <h2>GAME OVER</h2>
+                <p style="color:#fff;">SCORE: <span id="popup-score">0</span></p>
+                <p style="color:#aaa; font-size:18px;">PLAY TIME: <span id="popup-time">0</span>s</p>
+                <p class="blink" style="color:#7bed9f; margin-top:30px;">Press SPACE to Restart</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /**
+         * [스프라이트 설정 안내]
+         * 본인만의 이미지를 사용하려면:
+         * 1. preload() 함수 안에서 this.load.image('키값', '파일경로')를 호출하세요.
+         * 2. create() 함수 아래쪽의 createConfigurableSprites() 호출을 주석 처리하거나, 
+         *    해당 함수 내의 generateTexture 부분 대신 로드한 이미지를 사용하게 수정하세요.
+         * 예: this.load.image('player_idle', 'assets/hero.png');
+         */
+
+        const Sound = {
+            ctx: null,
+            init: function() {
+                if (!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+            },
+            playTone: function(freq, type, dur, vol) {
+                if (!this.ctx) return;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+                gain.gain.setValueAtTime(vol, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + dur);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + dur);
+            },
+            jump: function() { this.playTone(400, 'square', 0.15, 0.03); },
+            score: function() { this.playTone(800, 'sine', 0.1, 0.05); },
+            die: function() { this.playTone(150, 'sawtooth', 0.4, 0.05); }
+        };
+
+        let highScore = localStorage.getItem('vanitas_run_hiscore') || 0;
+        const uiScore = document.getElementById('ui-score');
+        const uiHiScore = document.getElementById('ui-hiscore');
+        const startPopup = document.getElementById('start-popup');
+        const gameoverPopup = document.getElementById('gameover-popup');
+        const popupScore = document.getElementById('popup-score');
+        const popupTime = document.getElementById('popup-time');
+
+        uiHiScore.innerText = String(Math.floor(highScore)).padStart(5, '0');
+
+        const config = {
+            type: Phaser.AUTO,
+            width: 800,
+            height: 400,
+            parent: 'game-container',
+            backgroundColor: '#1e1e24',
+            pixelArt: true,
+            physics: {
+                default: 'arcade',
+                arcade: {
+                    gravity: { y: 2500 },
+                    debug: false
+                }
+            },
+            scene: { preload: preload, create: create, update: update }
+        };
+
+        const game = new Phaser.Game(config);
+
+        let player, obstacles, ground;
+        let bgLayer1, bgLayer2, groundTile;
+        let gameState = 'IDLE';
+        let currentScore = 0;
+        let baseSpeed = 400;
+        let startTime = 0;
+        let playTime = 0;
+        let spawnTimer;
+
+        function preload() {
+            // 외부 에셋 로드 예시
+            // this.load.image('player_idle', 'assets/player.png');
+        }
+
+        function create() {
+            createConfigurableSprites(this);
+
+            bgLayer1 = this.add.tileSprite(400, 200, 800, 400, 'bg_layer1').setAlpha(0.3);
+            bgLayer2 = this.add.tileSprite(400, 200, 800, 400, 'bg_layer2').setAlpha(0.6);
+
+            ground = this.physics.add.staticImage(400, 380, 'ground_tex').setVisible(false);
+            groundTile = this.add.tileSprite(400, 380, 800, 40, 'ground_tex');
+
+            player = this.physics.add.sprite(100, 300, 'player_idle');
+            player.setCollideWorldBounds(true);
+            this.physics.add.collider(player, ground);
+
+            this.anims.create({ key: 'idle', frames: [{ key: 'player_idle' }], frameRate: 1 });
+            this.anims.create({ key: 'run', frames: [{ key: 'player_run1' }, { key: 'player_run2' }], frameRate: 10, repeat: -1 });
+            
+            obstacles = this.physics.add.group();
+            this.physics.add.collider(player, obstacles, onGameOver, null, this);
+
+            this.input.keyboard.on('keydown-SPACE', handleInput.bind(this));
+            this.input.on('pointerdown', handleInput.bind(this));
+
+            enterIdleState.call(this);
+        }
+
+        function handleInput() {
+            Sound.init();
+            
+            if (gameState === 'IDLE') {
+                startGame.call(this);
+            } else if (gameState === 'PLAYING') {
+                if (player.body.touching.down) {
+                    player.setVelocityY(-850);
+                    player.play('idle');
+                    Sound.jump();
+                }
+            } else if (gameState === 'GAMEOVER') {
+                enterIdleState.call(this);
+                startGame.call(this);
+            }
+        }
+
+        function enterIdleState() {
+            gameState = 'IDLE';
+            currentScore = 0;
+            baseSpeed = 400;
+            uiScore.innerText = '00000';
+            
+            player.setPosition(100, 300);
+            player.clearTint();
+            player.play('idle');
+            
+            obstacles.clear(true, true);
+            if(spawnTimer) spawnTimer.remove();
+            
+            startPopup.style.display = 'flex';
+            gameoverPopup.style.display = 'none';
+        }
+
+        function startGame() {
+            gameState = 'PLAYING';
+            startPopup.style.display = 'none';
+            player.play('run');
+            startTime = this.time.now;
+            
+            scheduleNextObstacle.call(this);
+        }
+
+        function scheduleNextObstacle() {
+            if (gameState !== 'PLAYING') return;
+
+            const minDelay = Math.max(700, 1500 - currentScore);
+            const maxDelay = Math.max(1200, 2500 - currentScore);
+            
+            spawnTimer = this.time.addEvent({
+                delay: Phaser.Math.Between(minDelay, maxDelay),
+                callback: spawnObstacle,
+                callbackScope: this
+            });
+        }
+
+        function spawnObstacle() {
+            if (gameState !== 'PLAYING') return;
+
+            const type = Phaser.Math.Between(1, 100);
+            let obs;
+
+            if (type <= 50) {
+                obs = obstacles.create(850, 345, 'obs_small');
+            } else if (type <= 80) {
+                obs = obstacles.create(850, 335, 'obs_large');
+            } else {
+                obs = obstacles.create(850, 270, 'obs_fly');
+            }
+
+            obs.body.setAllowGravity(false); // 바닥 장애물도 위치 고정을 위해 중력 제거
+            obs.setVelocityX(-baseSpeed);
+            
+            scheduleNextObstacle.call(this);
+        }
+
+        function update() {
+            if (gameState !== 'PLAYING') return;
+
+            playTime = Math.floor((this.time.now - startTime) / 1000);
+            currentScore += 0.1; 
+            uiScore.innerText = String(Math.floor(currentScore)).padStart(5, '0');
+
+            const scoreInt = Math.floor(currentScore);
+            if (scoreInt > 0 && scoreInt % 100 === 0 && this.lastScore !== scoreInt) {
+                baseSpeed += 25;
+                Sound.score();
+                this.lastScore = scoreInt;
+            }
+
+            if (player.body.touching.down && player.anims.currentAnim.key !== 'run') {
+                player.play('run');
+            }
+
+            bgLayer1.tilePositionX += (baseSpeed * 0.001);
+            bgLayer2.tilePositionX += (baseSpeed * 0.003);
+            groundTile.tilePositionX += (baseSpeed * 0.016);
+
+            obstacles.children.iterate(child => {
+                if (child && child.x < -50) child.destroy();
+            });
+        }
+
+        function onGameOver(player, obstacle) {
+            gameState = 'GAMEOVER';
+            this.physics.pause();
+            player.setTint(0xff4757);
+            player.play('idle');
+            Sound.die();
+
+            if (currentScore > highScore) {
+                highScore = currentScore;
+                localStorage.setItem('vanitas_run_hiscore', highScore);
+                uiHiScore.innerText = String(Math.floor(highScore)).padStart(5, '0');
+            }
+
+            popupScore.innerText = Math.floor(currentScore);
+            popupTime.innerText = playTime;
+            gameoverPopup.style.display = 'flex';
+            
+            this.cameras.main.shake(200, 0.02);
+        }
+
+        function createConfigurableSprites(scene) {
+            const g = scene.add.graphics();
+            
+            // 플레이어 대기
+            g.fillStyle(0x00d2ff); g.fillRect(0,0,32,32);
+            g.fillStyle(0xffffff); g.fillRect(20,6,6,6);
+            g.generateTexture('player_idle', 32, 32); g.clear();
+            
+            // 플레이어 런1
+            g.fillStyle(0x00d2ff); g.fillRect(0,0,32,28);
+            g.fillRect(4,28,8,4); g.fillRect(20,28,8,4); 
+            g.fillStyle(0xffffff); g.fillRect(20,6,6,6);
+            g.generateTexture('player_run1', 32, 32); g.clear();
+
+            // 플레이어 런2
+            g.fillStyle(0x00d2ff); g.fillRect(0,0,32,28);
+            g.fillRect(12,28,8,4); 
+            g.fillStyle(0xffffff); g.fillRect(20,6,6,6);
+            g.generateTexture('player_run2', 32, 32); g.clear();
+
+            // 장애물
+            g.fillStyle(0xff0055); g.fillRect(0,0,20,30);
+            g.generateTexture('obs_small', 20, 30); g.clear();
+
+            g.fillStyle(0xff0055); g.fillRect(0,0,30,50);
+            g.generateTexture('obs_large', 30, 50); g.clear();
+
+            g.fillStyle(0xffa502); g.fillRect(0,10,30,10); 
+            g.fillRect(10,0,10,30); 
+            g.generateTexture('obs_fly', 30, 30); g.clear();
+
+            // 배경
+            g.fillStyle(0x333333);
+            for(let i=0; i<10; i++) g.fillRect(i*80, 200 + Math.random()*50, 40, 200);
+            g.generateTexture('bg_layer1', 800, 400); g.clear();
+
+            g.fillStyle(0x444444);
+            for(let i=0; i<15; i++) g.fillRect(i*60, 250 + Math.random()*30, 30, 150);
+            g.generateTexture('bg_layer2', 800, 400); g.clear();
+
+            // 바닥
+            g.fillStyle(0x2c3e50); g.fillRect(0,0,800,40); 
+            g.fillStyle(0x00b4db); g.fillRect(0,0,800,4);
+            g.generateTexture('ground_tex', 800, 40); g.clear();
+        }
+    </script>
+</body>
+</html>
