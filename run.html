@@ -281,9 +281,12 @@
         function enterIdleState() {
             gameState = 'IDLE';
             currentScore = 0;
-            baseSpeed = 400;
+            baseSpeed = 400; 
             uiScore.innerText = '00000';
             
+            // 물리 엔진 재개 및 플레이어 초기화
+            this.physics.resume();
+            player.setVelocity(0, 0);
             player.setPosition(100, 300);
             player.clearTint();
             player.play('idle', true);
