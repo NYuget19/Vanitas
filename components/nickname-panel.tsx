@@ -9,13 +9,19 @@ type NicknamePanelProps = {
 };
 
 export function NicknamePanel({ authEnabled, databaseEnabled }: NicknamePanelProps) {
+  if (!authEnabled || !databaseEnabled) return null;
+
+  return <ClerkNicknamePanel />;
+}
+
+function ClerkNicknamePanel() {
   const { isLoaded, isSignedIn } = useUser();
   const [nickname, setNickname] = useState("");
   const [status, setStatus] = useState("닉네임을 설정해 주세요.");
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    if (!authEnabled || !databaseEnabled) return;
+    if (!isLoaded || !isSignedIn) return;
 
     let active = true;
     fetch("/api/profile", { cache: "no-store" })
@@ -32,9 +38,9 @@ export function NicknamePanel({ authEnabled, databaseEnabled }: NicknamePanelPro
     return () => {
       active = false;
     };
-  }, [authEnabled, databaseEnabled]);
+  }, [isLoaded, isSignedIn]);
 
-  if (!authEnabled || !databaseEnabled || !isLoaded || !isSignedIn) return null;
+  if (!isLoaded || !isSignedIn) return null;
 
   async function saveNickname() {
     setSaving(true);

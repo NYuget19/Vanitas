@@ -8,8 +8,6 @@ type AuthPanelProps = {
 };
 
 export function AuthPanel({ authEnabled, databaseEnabled }: AuthPanelProps) {
-  const { isLoaded, isSignedIn } = useUser();
-
   if (!authEnabled) {
     return (
       <section className="profile-panel auth-panel" aria-label="계정 상태">
@@ -21,6 +19,12 @@ export function AuthPanel({ authEnabled, databaseEnabled }: AuthPanelProps) {
       </section>
     );
   }
+
+  return <ClerkAuthPanel databaseEnabled={databaseEnabled} />;
+}
+
+function ClerkAuthPanel({ databaseEnabled }: { databaseEnabled: boolean }) {
+  const { isLoaded, isSignedIn } = useUser();
 
   return (
     <section className="profile-panel auth-panel" aria-label="계정 상태">
