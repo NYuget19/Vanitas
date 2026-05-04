@@ -1,0 +1,53 @@
+"use client";
+
+import { SignInButton, SignUpButton, UserButton, useUser } from "@clerk/nextjs";
+
+type AuthPanelProps = {
+  authEnabled: boolean;
+  databaseEnabled: boolean;
+};
+
+export function AuthPanel({ authEnabled, databaseEnabled }: AuthPanelProps) {
+  const { isLoaded, isSignedIn } = useUser();
+
+  if (!authEnabled) {
+    return (
+      <section className="profile-panel auth-panel" aria-label="계정 상태">
+        <div className="section-head">
+          <span>Account</span>
+          <strong>Setup</strong>
+        </div>
+        <h2>Clerk 환경변수를 연결하면 이메일과 비밀번호로 가입할 수 있습니다.</h2>
+      </section>
+    );
+  }
+
+  return (
+    <section className="profile-panel auth-panel" aria-label="계정 상태">
+      <div className="section-head">
+        <span>Account</span>
+        <strong>{databaseEnabled ? "Cloud Save" : "Auth Ready"}</strong>
+      </div>
+      {!isLoaded ? (
+        <h2>계정 상태를 확인하는 중입니다.</h2>
+      ) : !isSignedIn ? (
+        <>
+        <h2>로그인하면 바니슛 저장 데이터를 계정에 연결할 수 있습니다.</h2>
+        <div className="auth-actions">
+          <SignInButton mode="modal">
+            <button type="button">로그인</button>
+          </SignInButton>
+          <SignUpButton mode="modal">
+            <button type="button">가입</button>
+          </SignUpButton>
+        </div>
+        </>
+      ) : (
+        <div className="user-row">
+          <span>로그인됨</span>
+          <UserButton />
+        </div>
+      )}
+    </section>
+  );
+}

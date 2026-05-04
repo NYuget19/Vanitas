@@ -1,0 +1,10 @@
+node_modules/
+.next/
+.npm-cache/
+.vercel/
+public/fonts/
+*.log
+tsconfig.tsbuildinfo
+.env
+.env.*
+!.env.example
