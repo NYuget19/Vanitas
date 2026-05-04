@@ -1,13 +1,16 @@
 :root {
   --font-main: Galmuri11, "Galmuri11", "Malgun Gothic", Dotum, sans-serif;
   color-scheme: dark;
-  --bg: #101114;
-  --ink: #f3f0e8;
-  --muted: #a6a9a8;
-  --line: rgba(255, 255, 255, 0.14);
+  --bg: #12100e;
+  --ink: #f7f1e4;
+  --muted: #bcb3a1;
+  --line: rgba(247, 241, 228, 0.16);
+  --panel: #1d1b17;
+  --panel-2: #25221d;
   --accent: #41d6c3;
   --danger: #ff5d73;
   --gold: #e8c45d;
+  --leaf: #93c76f;
 }
 
 @font-face {
@@ -36,10 +39,7 @@ body {
   margin: 0;
   min-height: 100vh;
   overflow: hidden;
-  background:
-    radial-gradient(circle at 25% 20%, rgba(65, 214, 195, 0.16), transparent 34%),
-    radial-gradient(circle at 72% 70%, rgba(232, 196, 93, 0.1), transparent 28%),
-    linear-gradient(135deg, #101114, #191b1c 52%, #111214);
+  background: var(--bg);
   color: var(--ink);
   font-family: var(--font-main);
 }
@@ -58,10 +58,208 @@ button:hover {
   background: rgba(65, 214, 195, 0.14);
 }
 
+.app-shell {
+  display: grid;
+  grid-template-columns: 292px minmax(0, 1fr);
+  height: 100vh;
+}
+
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  min-width: 0;
+  padding: 22px;
+  border-right: 1px solid var(--line);
+  background: #181613;
+}
+
+.brand {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.brand-mark {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid rgba(65, 214, 195, 0.45);
+  border-radius: 8px;
+  background: #17312f;
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.brand strong,
+.brand span,
+.tab-button span,
+.tab-button strong,
+.section-head span,
+.profile-panel h2,
+.info-grid span,
+.ad-slot span,
+.ad-slot small,
+.kicker,
+.top-meta span {
+  display: block;
+}
+
+.brand span,
+.tab-button span,
+.section-head span,
+.info-grid span,
+.ad-slot span,
+.ad-slot small,
+.kicker,
+.top-meta span,
+.label {
+  color: var(--muted);
+  font-size: 12px;
+  letter-spacing: 0;
+}
+
+.game-tabs {
+  display: grid;
+  gap: 8px;
+}
+
+.tab-button {
+  display: grid;
+  gap: 4px;
+  min-height: 70px;
+  padding: 12px;
+  text-align: left;
+}
+
+.tab-button.active {
+  border-color: rgba(232, 196, 93, 0.62);
+  background: #3a2d18;
+}
+
+.tab-button strong {
+  color: var(--gold);
+  font-size: 18px;
+}
+
+.profile-panel,
+.ad-slot {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+}
+
+.profile-panel {
+  padding: 16px;
+}
+
+.section-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.section-head strong {
+  color: var(--accent);
+  font-size: 14px;
+}
+
+.profile-panel h2 {
+  margin: 14px 0;
+  font-size: 17px;
+  line-height: 1.55;
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.info-grid div {
+  min-height: 62px;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.info-grid strong {
+  display: block;
+  margin-top: 5px;
+  font-size: 18px;
+}
+
+.ad-slot {
+  display: grid;
+  gap: 6px;
+  min-height: 150px;
+  margin-top: auto;
+  padding: 14px;
+  align-content: center;
+  border-style: dashed;
+  background:
+    linear-gradient(135deg, rgba(255, 93, 115, 0.1), transparent 48%),
+    var(--panel);
+}
+
+.ad-slot strong {
+  color: var(--danger);
+}
+
+.arcade-main {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 14px;
+  min-width: 0;
+  min-height: 0;
+  padding: 18px;
+}
+
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
+  gap: 18px;
+}
+
+.topbar h1 {
+  margin: 4px 0 0;
+  font-size: clamp(32px, 5vw, 58px);
+  line-height: 1;
+}
+
+.top-meta {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.top-meta span {
+  min-height: 32px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.game-frame {
+  position: relative;
+  overflow: hidden;
+  min-height: 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #050607;
+}
+
 .shell {
   position: relative;
-  width: 100vw;
-  height: 100vh;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
 }
 
 .hud {
@@ -70,7 +268,7 @@ button:hover {
   top: 16px;
   left: 50%;
   display: grid;
-  width: min(900px, calc(100vw - 32px));
+  width: min(900px, calc(100% - 32px));
   grid-template-columns: repeat(3, minmax(0, 1fr)) auto;
   gap: 8px;
   transform: translateX(-50%);
@@ -97,16 +295,10 @@ button:hover {
   font-size: 20px;
 }
 
-.label {
-  color: var(--muted);
-  font-size: 11px;
-  letter-spacing: 0;
-}
-
 #game {
   display: block;
-  width: 100vw;
-  height: 100vh;
+  width: 100%;
+  height: 100%;
   background: #111315;
 }
 
@@ -115,7 +307,9 @@ button:hover {
   z-index: 5;
   top: 50%;
   left: 50%;
-  width: min(460px, calc(100vw - 32px));
+  width: min(460px, calc(100% - 32px));
+  max-height: calc(100% - 32px);
+  overflow: auto;
   padding: 28px;
   transform: translate(-50%, -50%);
   border: 1px solid rgba(255, 255, 255, 0.16);
@@ -131,7 +325,9 @@ button:hover {
   z-index: 6;
   top: 50%;
   left: 50%;
-  width: min(820px, calc(100vw - 32px));
+  width: min(820px, calc(100% - 32px));
+  max-height: calc(100% - 32px);
+  overflow: auto;
   padding: 24px;
   transform: translate(-50%, -50%);
   border: 1px solid rgba(255, 255, 255, 0.16);
@@ -266,7 +462,9 @@ button:hover {
   z-index: 6;
   top: 50%;
   left: 50%;
-  width: min(560px, calc(100vw - 32px));
+  width: min(560px, calc(100% - 32px));
+  max-height: calc(100% - 32px);
+  overflow: auto;
   padding: 24px;
   transform: translate(-50%, -50%);
   border: 1px solid rgba(255, 255, 255, 0.16);
@@ -339,7 +537,46 @@ button:hover {
   font-weight: 700;
 }
 
+@media (max-width: 980px) {
+  body {
+    overflow: auto;
+  }
+
+  .app-shell {
+    grid-template-columns: 1fr;
+    height: auto;
+    min-height: 100vh;
+  }
+
+  .sidebar {
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .ad-slot {
+    margin-top: 0;
+  }
+
+  .arcade-main {
+    min-height: 720px;
+  }
+}
+
 @media (max-width: 680px) {
+  .sidebar,
+  .arcade-main {
+    padding: 14px;
+  }
+
+  .topbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .top-meta {
+    justify-content: flex-start;
+  }
+
   .hud {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
@@ -357,15 +594,7 @@ button:hover {
     font-size: 36px;
   }
 
-  .level-panel {
-    max-height: calc(100vh - 112px);
-    overflow: auto;
-  }
-
-  .upgrade-grid {
-    grid-template-columns: 1fr;
-  }
-
+  .upgrade-grid,
   .stats-grid {
     grid-template-columns: 1fr;
   }

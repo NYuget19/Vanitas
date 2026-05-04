@@ -289,12 +289,15 @@ function renderMetaStore() {
 
 function resize() {
   const ratio = Math.min(window.devicePixelRatio || 1, 2);
-  canvas.width = Math.floor(window.innerWidth * ratio);
-  canvas.height = Math.floor(window.innerHeight * ratio);
+  const bounds = canvas.getBoundingClientRect();
+  const width = Math.max(320, bounds.width || window.innerWidth);
+  const height = Math.max(320, bounds.height || window.innerHeight);
+  canvas.width = Math.floor(width * ratio);
+  canvas.height = Math.floor(height * ratio);
   ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
-  view.scale = Math.min(window.innerWidth / WORLD_W, window.innerHeight / WORLD_H);
-  view.x = (window.innerWidth - WORLD_W * view.scale) / 2;
-  view.y = (window.innerHeight - WORLD_H * view.scale) / 2;
+  view.scale = Math.min(width / WORLD_W, height / WORLD_H);
+  view.x = (width - WORLD_W * view.scale) / 2;
+  view.y = (height - WORLD_H * view.scale) / 2;
   makeStars();
 }
 
@@ -1109,8 +1112,9 @@ function draw() {
   // 화면을 매 프레임 새로 그립니다. 실제 로직이 멈춰도 draw는 계속 호출됩니다.
   const sx = state.shake ? (Math.random() - 0.5) * state.shake : 0;
   const sy = state.shake ? (Math.random() - 0.5) * state.shake : 0;
+  const bounds = canvas.getBoundingClientRect();
   ctx.fillStyle = "#050607";
-  ctx.fillRect(0, 0, window.innerWidth, window.innerHeight);
+  ctx.fillRect(0, 0, bounds.width || canvas.width, bounds.height || canvas.height);
   ctx.save();
   ctx.translate(view.x + sx, view.y + sy);
   ctx.scale(view.scale, view.scale);

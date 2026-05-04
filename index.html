@@ -3,54 +3,114 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>신호 추락</title>
+    <meta name="description" content="Vanitas Arcade의 첫 번째 미니게임, Vanishoot." />
+    <title>Vanishoot | Vanitas Arcade</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <main class="shell">
-      <section class="hud" aria-label="게임 상태">
-        <div>
-          <span class="label">점수</span>
-          <strong id="score">0</strong>
+    <div class="app-shell">
+      <aside class="sidebar" aria-label="Vanitas Arcade 메뉴">
+        <div class="brand">
+          <span class="brand-mark" aria-hidden="true">V</span>
+          <div>
+            <strong>Vanitas Arcade</strong>
+            <span>Mini Game Portal</span>
+          </div>
         </div>
-        <div>
-          <span class="label">공세</span>
-          <strong id="wave">1</strong>
-        </div>
-        <div>
-          <span class="label">내구도</span>
-          <strong id="health">100%</strong>
-        </div>
-        <button id="pauseButton" type="button" title="일시정지">일시정지</button>
-      </section>
 
-      <canvas id="game" width="1280" height="720" aria-label="신호 추락 게임 화면"></canvas>
+        <nav class="game-tabs" aria-label="게임 목록">
+          <button class="tab-button active" type="button">
+            <span>01</span>
+            <strong>Vanishoot</strong>
+          </button>
+        </nav>
 
-      <section class="panel" id="panel">
-        <h1>신호 추락</h1>
-        <p>드론을 부수고 신호 조각을 모아 붕괴를 버티세요.</p>
-        <div class="wallet">보유 골드 <strong id="goldAmount">0</strong></div>
-        <div class="meta-store" id="metaStore" aria-label="메인 업그레이드"></div>
-        <button id="startButton" type="button">출격</button>
-      </section>
+        <section class="profile-panel" aria-label="게임 정보">
+          <div class="section-head">
+            <span>Featured</span>
+            <strong>바니슛</strong>
+          </div>
+          <h2>신호를 부수고, 조각을 모으고, 공세를 버티는 슈팅 로그라이트.</h2>
+          <div class="info-grid">
+            <div>
+              <span>Genre</span>
+              <strong>Shooter</strong>
+            </div>
+            <div>
+              <span>Save</span>
+              <strong>Local</strong>
+            </div>
+          </div>
+        </section>
 
-      <section class="level-panel" id="levelPanel" hidden>
-        <div class="level-copy">
-          <span class="label">레벨 상승</span>
-          <h2>강화 선택</h2>
-        </div>
-        <div class="upgrade-grid" id="upgradeGrid" aria-label="강화 선택지"></div>
-      </section>
+        <section class="ad-slot" aria-label="광고 영역">
+          <span>AD</span>
+          <strong>광고 배너 위치</strong>
+          <small>AdSense 승인 후 수익화 스크립트를 연결할 수 있습니다.</small>
+        </section>
+      </aside>
 
-      <section class="stats-panel" id="statsPanel" hidden>
-        <div class="level-copy">
-          <span class="label">일시정지</span>
-          <h2>현재 능력치</h2>
-        </div>
-        <div class="stats-grid" id="statsGrid" aria-label="현재 능력치"></div>
-        <button id="resumeButton" type="button">계속하기</button>
-      </section>
-    </main>
+      <main class="arcade-main">
+        <header class="topbar">
+          <div>
+            <span class="kicker">Vanitas Game 01</span>
+            <h1>Vanishoot</h1>
+          </div>
+          <div class="top-meta">
+            <span>WASD 이동</span>
+            <span>마우스 발사</span>
+            <span>우클릭 회피</span>
+          </div>
+        </header>
+
+        <section class="game-frame" aria-label="Vanishoot 게임">
+          <main class="shell">
+            <section class="hud" aria-label="게임 상태">
+              <div>
+                <span class="label">점수</span>
+                <strong id="score">0</strong>
+              </div>
+              <div>
+                <span class="label">공세</span>
+                <strong id="wave">1</strong>
+              </div>
+              <div>
+                <span class="label">내구도</span>
+                <strong id="health">100%</strong>
+              </div>
+              <button id="pauseButton" type="button" title="일시정지">일시정지</button>
+            </section>
+
+            <canvas id="game" width="1280" height="720" aria-label="Vanishoot 게임 화면"></canvas>
+
+            <section class="panel" id="panel">
+              <h1>Vanishoot</h1>
+              <p>드론을 부수고 신호 조각을 모아 붕괴를 버티세요.</p>
+              <div class="wallet">보유 골드 <strong id="goldAmount">0</strong></div>
+              <div class="meta-store" id="metaStore" aria-label="메인 업그레이드"></div>
+              <button id="startButton" type="button">출격</button>
+            </section>
+
+            <section class="level-panel" id="levelPanel" hidden>
+              <div class="level-copy">
+                <span class="label">레벨 상승</span>
+                <h2>강화 선택</h2>
+              </div>
+              <div class="upgrade-grid" id="upgradeGrid" aria-label="강화 선택지"></div>
+            </section>
+
+            <section class="stats-panel" id="statsPanel" hidden>
+              <div class="level-copy">
+                <span class="label">일시정지</span>
+                <h2>현재 능력치</h2>
+              </div>
+              <div class="stats-grid" id="statsGrid" aria-label="현재 능력치"></div>
+              <button id="resumeButton" type="button">계속하기</button>
+            </section>
+          </main>
+        </section>
+      </main>
+    </div>
 
     <script src="game.js"></script>
   </body>
