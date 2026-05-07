@@ -11,6 +11,8 @@ const upgradeGrid = document.querySelector("#upgradeGrid");
 const statsPanel = document.querySelector("#statsPanel");
 const statsGrid = document.querySelector("#statsGrid");
 const resumeButton = document.querySelector("#resumeButton");
+const restartButton = document.querySelector("#restartButton");
+const mainMenuButton = document.querySelector("#mainMenuButton");
 const goldAmountEl = document.querySelector("#goldAmount");
 const metaStore = document.querySelector("#metaStore");
 
@@ -409,7 +411,33 @@ function resetGame() {
   levelPanel.hidden = true;
   statsPanel.hidden = true;
   pauseButton.textContent = "일시정지";
+  panel.querySelector("h1").textContent = "Vanitashoot";
+  panel.querySelector("p").textContent = "드론을 부수고 신호 조각을 모아 붕괴를 버티세요.";
+  startButton.textContent = "출격";
   startWave();
+  updateHud();
+}
+
+function returnToMainMenu(askConfirm = false) {
+  if (askConfirm && !window.confirm("현재 작전을 종료하고 메인화면으로 돌아갈까요?")) return;
+  state.running = false;
+  state.paused = false;
+  state.choosingUpgrade = false;
+  state.pickups = [];
+  state.bullets = [];
+  state.enemyBullets = [];
+  state.enemies = [];
+  state.particles = [];
+  state.floaters = [];
+  state.player = null;
+  panel.hidden = false;
+  levelPanel.hidden = true;
+  statsPanel.hidden = true;
+  pauseButton.textContent = "일시정지";
+  panel.querySelector("h1").textContent = "Vanitashoot";
+  panel.querySelector("p").textContent = "드론을 부수고 신호 조각을 모아 붕괴를 버티세요.";
+  startButton.textContent = "출격";
+  renderMetaStore();
   updateHud();
 }
 
@@ -1376,6 +1404,11 @@ window.addEventListener("pointerup", (event) => {
 startButton.addEventListener("click", resetGame);
 pauseButton.addEventListener("click", togglePause);
 resumeButton.addEventListener("click", togglePause);
+restartButton.addEventListener("click", () => {
+  if (!state.running || !window.confirm("현재 작전을 포기하고 다시 시작할까요?")) return;
+  resetGame();
+});
+mainMenuButton.addEventListener("click", () => returnToMainMenu(true));
 
 function togglePause() {
   // 일시정지는 게임 로직만 멈추고 현재 능력치 패널을 보여줍니다.

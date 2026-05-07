@@ -4,8 +4,8 @@ import localFont from "next/font/local";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Vanishoot | Vanitas Arcade",
-  description: "Vanitas Arcade의 첫 번째 미니게임, Vanishoot.",
+  title: "Vanitashoot | Vanitas Arcade",
+  description: "Vanitas Arcade의 첫 번째 미니게임, Vanitashoot.",
 };
 
 const clerkKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;

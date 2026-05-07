@@ -172,11 +172,17 @@ button:hover {
 }
 
 .user-row {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: 1fr auto;
   align-items: center;
   gap: 12px;
   min-height: 44px;
+}
+
+.signout-button {
+  grid-column: 1 / -1;
+  min-height: 36px;
+  width: 100%;
 }
 
 .nickname-field {
@@ -249,6 +255,11 @@ button:hover {
 
 .ad-slot strong {
   color: var(--danger);
+}
+
+.adsbygoogle {
+  display: block;
+  min-height: 96px;
 }
 
 .arcade-main {
@@ -552,6 +563,12 @@ button:hover {
 .stats-panel button {
   width: 100%;
   min-height: 44px;
+}
+
+.pause-actions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
 }
 
 .panel[hidden] {

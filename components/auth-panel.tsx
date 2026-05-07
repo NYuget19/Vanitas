@@ -6,6 +6,7 @@ import {
   ClerkLoaded,
   ClerkLoading,
   SignInButton,
+  SignOutButton,
   SignUpButton,
   UserButton,
   useUser,
@@ -82,7 +83,7 @@ function ClerkAuthBody() {
   if (!isSignedIn) {
     return (
       <>
-        <h2>로그인하면 바니슛 데이터를 계정에 연결할 수 있습니다.</h2>
+        <h2>로그인하면 바니타슛 데이터를 계정에 연결할 수 있습니다.</h2>
         <div className="auth-actions">
           <SignInButton mode="modal">
             <button type="button">로그인</button>
@@ -99,6 +100,9 @@ function ClerkAuthBody() {
     <div className="user-row">
       <span>로그인됨</span>
       <UserButton />
+      <SignOutButton>
+        <button className="signout-button" type="button">로그아웃</button>
+      </SignOutButton>
     </div>
   );
 }
